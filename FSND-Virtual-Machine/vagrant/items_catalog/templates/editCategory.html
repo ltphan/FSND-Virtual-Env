@@ -1,0 +1,12 @@
+<html>
+	<body>
+	<form method = 'POST'>
+
+		<p>Name:</p>
+		<input type = 'text' size='30' name='category_name' value='{{editedCategory.name}}'>
+
+		<input type='submit' value='Edit'>
+	</form>
+<a href = "{{url_for('showAllCategories', category_id = category_id)}}"> Cancel </a>
+	</body>
+</html>

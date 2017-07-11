@@ -1,0 +1,42 @@
+<html>
+	<body>
+		<a href="/">Home</a>
+		<br/>
+
+		{% with messages = get_flashed_messages() %}
+
+		{% if messages %}
+			<ul> 
+				{% for message in messages %}
+					<li><strong> {{message}} </strong> </li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		{% endwith %}
+
+		<h1> Items for "{{ cat.name }}" </h1>
+		<a href='{{url_for('addItem', category_id = cat.id )}}'>Create Item</a>
+		<ul>
+			{% if items %}
+				{% for i in items %}
+					<li>
+						{{ i.name }}
+						<br>
+						{{ i.description }}
+
+						{% if session['access_token'] %}
+							{% if session['user_id'] and session['user_id'] === i.user_id %}
+								<a href='{{url_for('editItem', category_id = cat.id, item_id = i.id)}}'>Edit</a>
+								<a href='{{url_for('deleteItem', category_id = cat.id, item_id = i.id)}}'> Delete</a>
+							{% endif %}
+						{% endif %}
+					</li>
+				{% endfor %}
+			{% else %}
+				<p>No Items</p>
+			{% endif %}
+		</ul>
+
+	</body>
+	
+<html>

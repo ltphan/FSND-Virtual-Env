@@ -15,8 +15,12 @@
 		{% endwith %}
 
 		<h1> Items for "{{ cat.name }}" </h1>
-		<a href='{{url_for('addItem', category_id = cat.id )}}'>Create Item</a>
-		<ul>
+
+		{% if 'user_id' in session and session['user_id'] == cat.id %}
+			<a href='{{url_for('addItem', category_id = cat.id )}}'>Create Item</a>
+		{% endif %}
+
+		<ul> 
 			{% if items %}
 				{% for i in items %}
 					<li>
@@ -24,12 +28,10 @@
 						<br>
 						{{ i.description }}
 
-						{% if session['access_token'] %}
-							{% if session['user_id'] and session['user_id'] === i.user_id %}
+				
 								<a href='{{url_for('editItem', category_id = cat.id, item_id = i.id)}}'>Edit</a>
 								<a href='{{url_for('deleteItem', category_id = cat.id, item_id = i.id)}}'> Delete</a>
-							{% endif %}
-						{% endif %}
+						
 					</li>
 				{% endfor %}
 			{% else %}

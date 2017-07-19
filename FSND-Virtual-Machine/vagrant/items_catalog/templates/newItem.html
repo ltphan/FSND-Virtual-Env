@@ -1,12 +1,15 @@
-<h1>New Item</h1>
+{% extends "base.html" %}
 
-<a href='/'>Home</a>
-<a href='/category'
-<form method="post">
-	Item: <br>
-	<input type="text" name="itemName" placeholder="New Item">
-	<div>
-	Description: <br>
-	<input type="text" name="descriptionItem" placeholder="Description">
-	<input type="submit" value="Create">
-</form>
+{% block content %}
+
+	<h1>New Item</h1>
+	<a href='/category/{{category_id}}'>Back</a>
+	<form method="post">
+		Item: <br>
+		<input type="text" name="itemName" placeholder="New Item">
+		<div>
+		Description: <br>
+		<input type="text" name="descriptionItem" placeholder="Description">
+		<input type="submit" value="Create">
+	</form>
+{% endblock %}

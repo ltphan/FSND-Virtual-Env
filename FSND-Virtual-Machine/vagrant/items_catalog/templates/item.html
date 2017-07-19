@@ -1,44 +1,28 @@
-<html>
-	<body>
-		<a href="/">Home</a>
-		<br/>
+{% extends "base.html" %}
 
-		{% with messages = get_flashed_messages() %}
+{% block content %}
+	<h1> Items for "{{ cat.name }}" </h1>
+	
+      	{% if 'user_id' in session and session['user_id'] == cat.user_id %}
+        	<a href='{{url_for('addItem', category_id = cat.id )}}'>Create Item</a>   
+        {% endif %}
 
-		{% if messages %}
-			<ul> 
-				{% for message in messages %}
-					<li><strong> {{message}} </strong> </li>
-				{% endfor %}
-			</ul>
-		{% endif %}
-		{% endwith %}
-
-		<h1> Items for "{{ cat.name }}" </h1>
-
-		{% if 'user_id' in session and session['user_id'] == cat.id %}
-			<a href='{{url_for('addItem', category_id = cat.id )}}'>Create Item</a>
-		{% endif %}
-
-		<ul> 
+		<div style="display: flex;">
 			{% if items %}
 				{% for i in items %}
-					<li>
-						{{ i.name }}
-						<br>
-						{{ i.description }}
-
-				
-								<a href='{{url_for('editItem', category_id = cat.id, item_id = i.id)}}'>Edit</a>
-								<a href='{{url_for('deleteItem', category_id = cat.id, item_id = i.id)}}'> Delete</a>
-						
-					</li>
+				<div class="card" style="width: 20rem;">
+				  <img class="card-img-top" src="http://via.placeholder.com/350x150" alt="Card image cap">
+				  <div class="card-block">
+				    <h4 class="card-title">{{ i.name }}</h4>
+				    <p class="card-text">{{ i.description }}</p>
+				    <a href='{{url_for('editItem', category_id = cat.id, item_id = i.id)}}'>Edit</a>
+					<a href='{{url_for('deleteItem', category_id = cat.id, item_id = i.id)}}'> Delete</a>
+				  </div>
+				</div>
 				{% endfor %}
 			{% else %}
 				<p>No Items</p>
 			{% endif %}
-		</ul>
+		</div>
 
-	</body>
-	
-<html>
+{% endblock %}

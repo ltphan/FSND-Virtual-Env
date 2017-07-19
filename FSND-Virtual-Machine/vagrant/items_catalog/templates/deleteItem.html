@@ -1,6 +1,6 @@
-<html>
+{% extends "base.html" %}
 
-<body>
+{% block content %}
 <h1> Are you sure you want to delete {{item_id.name}}? </h1>
 
 <form method = 'post'>
@@ -10,6 +10,5 @@
 </form>
 
 <a href = "{{url_for('categoryPage', category_id = category_id)}}"> Cancel </a>
-</body>
 
-</html>
+{% endblock %}

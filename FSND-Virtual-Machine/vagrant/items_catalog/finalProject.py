@@ -1,14 +1,19 @@
-from flask import Flask, render_template, request, 
-redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from functools import wraps
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item, User
 from flask import session as login_session
+
 import random, string
+
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
+
 import httplib2
 import json
+
 from flask import make_response
 import requests
 
@@ -25,19 +30,29 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in login_session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 # JSON API ENDPOINT FOR ALL ITEMS IN A CATEGORY
 @app.route('/category/<int:category_id>/items/JSON')
-
 def itemsJSON(category_id):
     items = session.query(Item).filter_by(category_id=category_id).all()
     return jsonify(items=[i.serialize for i in items])
 
+
 # JSON API ENDPOINT FOR A ITEM IN A CATEGORY
 @app.route('/item/<int:item_id>/JSON')
-
 def singleItemJSON(item_id):
     items = session.query(Item).filter_by(id=item_id).all()
     return jsonify(item=[i.serialize for i in items])
+
 
 # JSON API ENDPOINT FOR ALL CATEGORIES
 @app.route('/category/JSON')
@@ -45,17 +60,17 @@ def categoriesJSON():
     categories = session.query(Category).all()
     return jsonify(categories=[c.serialize for c in categories])
 
+
 # JSON API ENDPOINT FOR ONE CATEGORY
 @app.route('/category/<int:category_id>/JSON')
 def categoryJSON(category_id):
     categories = session.query(Category).filter_by(id=category_id).all()
     return jsonify(category=[c.serialize for c in categories])
 
+
 # Show all categories
 @app.route('/')
 @app.route('/category/')
-
-
 def showAllCategories():
     allCategories = session.query(Category)
     if 'username' in login_session:
@@ -63,14 +78,15 @@ def showAllCategories():
         return render_template('categories.html', categories=allCategories)
     else:
         return render_template('public_categories.html',
-                              categories=allCategories)
+            categories=allCategories)
+
 
 # Add new category
 @app.route('/category/new/', methods=['GET', 'POST'])
-
+@login_required
 def newCategory():
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
     if request.method == 'POST':
         print 'create new catalog'
         newCategory = Category(name=request.form['categoryName'],
@@ -84,9 +100,10 @@ def newCategory():
 
 # Edit category
 @app.route('/category/<int:category_id>/edit/', methods=['GET', 'POST'])
+@login_required
 def editCategory(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
     editedCategory = session.query(Category).filter_by(id=category_id).one()
 
     if editedCategory.user_id != login_session['user_id']:
@@ -98,16 +115,19 @@ def editCategory(category_id):
         session.add(editedCategory)
         session.commit()
         flash("category has been edited!")
-        return redirect(url_for('showAllCategories', category_id=category_id))
+        return redirect(url_for('showAllCategories',
+            category_id=category_id))
     else:
         return render_template('editCategory.html',
             editedCategory=editedCategory)
 
+
 # Delete category
 @app.route('/category/<int:category_id>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteCategory(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     categoryToDelete = session.query(Category).filter_by(id=category_id).one()
 
@@ -129,16 +149,17 @@ def deleteCategory(category_id):
 def categoryPage(category_id):
     allItems = session.query(Item)
     category = session.query(Category).filter_by(id=category_id).one()
-    filteredItems = session.query(Item).filter_by(category_id=category_id)
-    .all()
+    filteredItems = session.query(Item).filter_by(category_id=category_id).all()
     return render_template('item.html', items=filteredItems,
         cat=category, allItems=allItems)
 
+
 # Add new item
 @app.route('/category/<int:category_id>/new/', methods=['GET', 'POST'])
+@login_required
 def addItem(category_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     category = session.query(Category).filter_by(id=category_id).one()
 
@@ -160,12 +181,13 @@ def addItem(category_id):
         return render_template('newItem.html', category_id=category_id)
 
 
-#Edit item
+# Edit item
 @app.route('/category/<int:category_id>/item/<int:item_id>/edit/',
  methods=['GET', 'POST'])
+@login_required
 def editItem(category_id, item_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
 
     editedItem = session.query(Item).filter_by(id=item_id).one()
 
@@ -188,9 +210,10 @@ def editItem(category_id, item_id):
 # Delete item
 @app.route('/category/<int:category_id>/<int:item_id>/delete/',
     methods=['GET', 'POST'])
+@login_required
 def deleteItem(category_id, item_id):
-    if 'username' not in login_session:
-        return redirect('/login')
+    # if 'username' not in login_session:
+    #     return redirect('/login')
     itemToDelete = session.query(Item).filter_by(id=item_id).one()
 
     if itemToDelete.user_id != login_session['user_id']:
@@ -215,6 +238,7 @@ def showLogin():
     login_session['state'] = state
     print "hello"
     return render_template('login.html', STATE=state)
+
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -305,11 +329,12 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    # how to keep string for line 308
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: \
+    150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
+
 
 # DISCONNET - Revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
@@ -348,6 +373,7 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+
 def createUser(login_session):
     newUser = User(name=login_session['username'],
         email=login_session['email'],
@@ -357,9 +383,11 @@ def createUser(login_session):
     user = session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
+
 def getUserInfo(user_id):
     user = session.query(User).filter_by(id=user_id).one()
     return user
+
 
 def getUserID(email):
     try:
@@ -367,6 +395,7 @@ def getUserID(email):
         return user.id
     except:
         return None
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
